@@ -2,6 +2,9 @@ package dev.oaep.probe;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.graphics.Color;
+import android.graphics.Insets;
+import android.view.WindowInsets;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
 import android.security.keystore.KeyProperties;
@@ -33,21 +36,52 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        // Android 15+ edge-to-edge: keep controls clear of system bars.
+        int pad = (int) (18 * getResources().getDisplayMetrics().density);
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.setClipToPadding(false);
+        scroll.setBackgroundColor(Color.WHITE);
+        scroll.setOnApplyWindowInsetsListener((view, insets) -> {
+            Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+            view.setPadding(pad, pad + bars.top, pad, pad + bars.bottom);
+            return insets;
+        });
+
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
-        int pad = (int) (18 * getResources().getDisplayMetrics().density);
-        column.setPadding(pad, pad, pad, pad);
+        column.setFocusableInTouchMode(true);
+
+        TextView title = new TextView(this);
+        title.setText("KeyMint RSA-OAEP testi");
+        title.setTextColor(Color.BLACK);
+        title.setTextSize(23);
+        title.setPadding(0, 0, 0, pad);
+
         button = new Button(this);
         button.setText("RSA-OAEP MGF1 TESTİNİ ÇALIŞTIR");
+        button.setAllCaps(false);
+
+        TextView intro = new TextView(this);
+        intro.setText("AndroidKeyStore üzerinde MGF1 SHA-1 ve SHA-256 karşılaştırılır. Test anahtarı yalnızca bu uygulama için oluşturulur ve silinir.");
+        intro.setTextColor(Color.DKGRAY);
+        intro.setTextSize(14);
+        intro.setPadding(0, pad / 2, 0, pad);
+
         output = new TextView(this);
-        output.setTextIsSelectable(true);
         output.setTextSize(14);
-        output.setText("Donanımsal AndroidKeyStore anahtarıyla MGF1 SHA-1 ve SHA-256 test edilir.\nHer denemede geçici anahtar kullanılır ve silinir.");
+        output.setTextColor(Color.BLACK);
+        output.setText("Hazır. Yukarıdaki test düğmesine bas.\n");
+
+        column.addView(title);
         column.addView(button);
+        column.addView(intro);
         column.addView(output);
-        ScrollView scroll = new ScrollView(this);
         scroll.addView(column);
         setContentView(scroll);
+        column.requestFocus();
+        scroll.requestApplyInsets();
         button.setOnClickListener(v -> {
             button.setEnabled(false);
             output.setText("Test başlıyor…\n");
